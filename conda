@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2024 Josh Klein <dev@szed.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+import json
+import locale
+import os
+import re
+import subprocess
+import sys
+
+EXECUTABLE_PATH = "/opt/local/bin/micromamba"
+
+PASSTHROUGH_PREFIXES = [
+    ["run"],
+    ["create"],
+    ["install"],
+]
+
+
+def micromamba(cmd):
+    out = subprocess.check_output([EXECUTABLE_PATH] + cmd)
+    return out.decode(locale.getpreferredencoding())
+
+
+def micromamba_json(cmd):
+    return json.loads(micromamba(cmd + ["--json"]))
+
+
+def sort_envs(envs):
+    special_name = re.compile(r"(\.cache|conda-bld)[/\\]")
+    special_envs = [e for e in envs if special_name.search(e)]
+    non_special_envs = [e for e in envs if not special_name.search(e)]
+    return sorted(non_special_envs) + sorted(special_envs)
+
+
+def print_json(data):
+    print(json.dumps(data, indent=4))
+
+
+def main(args):
+    if args == ["info", "--envs", "--json"]:
+        base_env = micromamba_json(["info"])["base environment"]
+        print_json(
+            {
+                "envs_dirs": [base_env],
+                "conda_prefix": base_env,
+                "envs": sort_envs(micromamba_json(["env", "list"])["envs"]),
+            },
+        )
+    elif args == ["env", "list", "--json"]:
+        print_json({"envs": sort_envs(micromamba_json(["env", "list"])["envs"])})
+    elif args[0] == "list":
+        if args[-1] == "-e":
+            out = micromamba_json(args[:-1])
+            print(
+                "\n".join(
+                    "{name}={version}={build_string}".format(**pkg) for pkg in out
+                )
+            )
+        else:
+            out = micromamba(args)
+            lines = (
+                line.strip()
+                for line in out.splitlines()
+                if line.startswith(" ") and not line.startswith("  Name")
+            )
+            print("\n".join(lines))
+    elif any(args[: len(prefix)] == prefix for prefix in PASSTHROUGH_PREFIXES):
+        os.execlp(
+            EXECUTABLE_PATH,
+            EXECUTABLE_PATH,
+            *(arg for arg in args if arg != "--no-capture-output")
+        )
+    else:
+        raise NotImplementedError(str(args))
+    return 0
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    try:
+        sys.exit(main(args))
+    except Exception:
+        raise
