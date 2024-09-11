@@ -31,8 +31,15 @@ PASSTHROUGH_PREFIXES = [
 
 
 def micromamba(cmd):
-    out = subprocess.check_output([EXECUTABLE_PATH] + cmd)
-    return out.decode(locale.getpreferredencoding())
+    try:
+        out = subprocess.check_output([EXECUTABLE_PATH] + cmd)
+        return out.decode(locale.getpreferredencoding())
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing micromamba command: {cmd}\n{e}")
+        sys.exit(e.returncode)
+    except FileNotFoundError:
+        print(f"Micromamba executable not found at {EXECUTABLE_PATH}.")
+        sys.exit(1)
 
 
 def micromamba_json(cmd):
