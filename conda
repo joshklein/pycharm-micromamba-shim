@@ -43,7 +43,11 @@ def micromamba(cmd):
 
 
 def micromamba_json(cmd):
-    return json.loads(micromamba(cmd + ["--json"]))
+    try:
+        return json.loads(micromamba(cmd + ["--json"]))
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from micromamba command: {cmd}\n{e}")
+        sys.exit(1)
 
 
 def sort_envs(envs):
