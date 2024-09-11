@@ -58,7 +58,11 @@ def sort_envs(envs):
 
 
 def print_json(data):
-    print(json.dumps(data, indent=4))
+    try:
+        print(json.dumps(data, indent=4))
+    except TypeError as e:
+        print(f"Error printing JSON data: {e}")
+        sys.exit(1)
 
 
 def main(args):
