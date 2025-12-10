@@ -5,4 +5,8 @@ This is a simple shim script to wrap `micromamba` for use with [PyCharm](https:/
 3. In **PyCharm Settings** -> **Python Interpreter** -> **Add Interpreter**, add a new 
    Conda Environment with the shim set as the Conda Executable.
 
-![Screenshot of PyCharm Settings](screenshot.png "PyCharm Settings")
+![Screenshot of PyCharm Settings](screenshot-original.png "PyCharm Settings")
+
+As of PyCharm 2025.3, the interpretter settings have a different look:
+
+![Screenshot of PyCharm 2025.3 Settings](screenshot-2025.3.png "PyCharm 2025.3 Settings")
