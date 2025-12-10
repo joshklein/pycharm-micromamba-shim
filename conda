@@ -23,7 +23,8 @@ import sys
 
 # If you have mamba initialized your shell, MAMBA_EXE will be set to the path of the micromamba executable.
 # Otherwise, you need to set this path manually.
-EXECUTABLE_PATH = os.environ["MAMBA_EXE"]
+#EXECUTABLE_PATH = os.environ["MAMBA_EXE"]
+EXECUTABLE_PATH = "/Users/josh/.local/bin/micromamba"
 
 PASSTHROUGH_PREFIXES = [
     ["run"],
