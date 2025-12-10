@@ -21,12 +21,15 @@ import re
 import subprocess
 import sys
 
-EXECUTABLE_PATH = "/opt/local/bin/micromamba"
+# If you have mamba initialized your shell, MAMBA_EXE will be set to the path of the micromamba executable.
+# Otherwise, you need to set this path manually.
+EXECUTABLE_PATH = os.environ["MAMBA_EXE"]
 
 PASSTHROUGH_PREFIXES = [
     ["run"],
     ["create"],
     ["install"],
+    ["update"]
 ]
 
 
@@ -71,7 +74,10 @@ def main(args):
         sys.exit(1)
 
     try:
-        if args == ["info", "--envs", "--json"]:
+        if args == ["--version"]:
+            out = micromamba(args)
+            print("conda " + out.strip())
+        elif args == ["info", "--envs", "--json"]:
             base_env = micromamba_json(["info"])["base environment"]
             print_json(
                 {
@@ -83,7 +89,9 @@ def main(args):
         elif args == ["env", "list", "--json"]:
             print_json({"envs": sort_envs(micromamba_json(["env", "list"])["envs"])})
         elif args[0] == "list":
-            if args[-1] == "-e":
+            if "--json" in args:
+                print(micromamba(args))
+            elif args[-1] == "-e":
                 out = micromamba_json(args[:-1])
                 print(
                     "\n".join(
